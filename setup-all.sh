@@ -15,7 +15,6 @@ echo -e "${NC}"
 echo -e "  ${CYAN}Server Setup — 3dProxy + PBX Dashboard${NC}"
 echo ""
 
-# ── Количество прокси ─────────────────────────────────────────────────────────
 read -rp "  Сколько SOCKS5 прокси создать? " PROXY_COUNT
 [[ "$PROXY_COUNT" =~ ^[0-9]+$ ]] && [ "$PROXY_COUNT" -ge 1 ] || err "Введите число >= 1"
 echo ""
@@ -23,9 +22,8 @@ echo ""
 # ── Шаг 1: 3dProxy ───────────────────────────────────────────────────────────
 info "Шаг 1/2 — Устанавливаем 3dProxy (${PROXY_COUNT} шт)..."
 
-# Скачиваем во временный файл — единственный способ корректно передать stdin
-TMP_3PROXY=$(mktemp /tmp/3proxy-install-XXXXXX.sh)
-curl -fsSL https://raw.githubusercontent.com/garaed/3dProxy/main/3proxy-install.sh \
+TMP_3PROXY=$(mktemp /tmp/3proxy-XXXXXX.sh)
+curl -fsSL https://raw.githubusercontent.com/garaed/3dProxy/refs/heads/main/3proxy_install \
     -o "$TMP_3PROXY"
 chmod +x "$TMP_3PROXY"
 echo "$PROXY_COUNT" | bash "$TMP_3PROXY"
@@ -36,8 +34,7 @@ echo ""
 
 # ── Шаг 2: PBX Dashboard ─────────────────────────────────────────────────────
 info "Шаг 2/2 — Устанавливаем PBX Dashboard..."
-bash <(curl -fsSL \
-    https://raw.githubusercontent.com/garaed/PBX_dashboard/main/setup.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/garaed/PBX_dashboard/main/setup.sh)
 ok "PBX Dashboard установлен"
 echo ""
 
@@ -70,11 +67,9 @@ else
         done
     done < "$CFG"
 
-    COUNT=0
-    current_user=""
+    COUNT=0; current_user=""
     while IFS= read -r line; do
-        line="${line%%#*}"
-        line="${line//[$'\t' ]/ }"
+        line="${line%%#*}"; line="${line//[$'\t' ]/ }"
         line="${line## }"; line="${line%% }"
         if [[ "$line" =~ ^allow[[:space:]]+([^[:space:]]+) ]]; then
             current_user="${BASH_REMATCH[1]}"
@@ -82,8 +77,7 @@ else
             port="${BASH_REMATCH[1]}"
             pass="${CREDS[$current_user]:-???}"
             echo -e "  ${YELLOW}socks5://${current_user}:${pass}@${SERVER_IP}:${port}${NC}"
-            ((COUNT++)) || true
-            current_user=""
+            ((COUNT++)) || true; current_user=""
         fi
     done < "$CFG"
 
